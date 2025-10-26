@@ -205,7 +205,20 @@ async def chat_loop():
                     
                 except Exception as e:
                     print(" " * 50, end='\r')
-                    print(f"\n{Colors.RED}❌ Erreur : {e}{Colors.RESET}\n")
+                    error_msg = str(e).lower()
+                    
+                    # Messages d'erreur spécifiques pour les cas courants
+                    if "503" in error_msg or "overloaded" in error_msg:
+                        print(f"\n{Colors.RED}❌ Le modèle Gemini est temporairement surchargé.{Colors.RESET}")
+                        print(f"{Colors.YELLOW}💡 Réessayez dans quelques secondes...{Colors.RESET}\n")
+                    elif "rate_limit" in error_msg or "quota" in error_msg:
+                        print(f"\n{Colors.RED}❌ Limite d'utilisation atteinte.{Colors.RESET}")
+                        print(f"{Colors.YELLOW}💡 Attendez quelques minutes avant de réessayer.{Colors.RESET}\n")
+                    elif "api_key" in error_msg or "apikey" in error_msg:
+                        print(f"\n{Colors.RED}❌ Problème avec la clé API.{Colors.RESET}")
+                        print(f"{Colors.YELLOW}💡 Vérifiez votre fichier .env{Colors.RESET}\n")
+                    else:
+                        print(f"\n{Colors.RED}❌ Erreur : {e}{Colors.RESET}\n")
             
             except KeyboardInterrupt:
                 print(f"\n\n{Colors.YELLOW}🛑 Interruption détectée{Colors.RESET}")

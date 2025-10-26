@@ -1,0 +1,71 @@
+# Configuration globale Hello Pulse
+# Tous les agents et services sont configurés ici
+
+# === AGENTS ===
+
+agents:
+  facilitator:
+    model:
+      name: "gemini-2.0-flash"
+      temperature: 0.7
+      max_tokens: 2048
+    
+    postures:
+      default: "guide"
+      auto_switch: true
+      available:
+        - guide
+        - provocateur
+        - mediateur
+        - timekeeper
+    
+    behavior:
+      encourage_creativity: true
+      suggest_transitions: true
+      proactive_interventions: true
+    
+    monitoring:
+      check_interval: 30  # secondes
+      thresholds:
+        silence_warning: 900  # 15 minutes
+        silence_critical: 1500  # 25 minutes
+        dominant_threshold: 0.5  # 50% de participation
+        energy_drop_warning: 0.3  # 30% de baisse
+        energy_drop_critical: 0.5  # 50% de baisse
+
+  general:
+    model:
+      name: "gemini-2.0-flash"
+      temperature: 0.5
+      max_tokens: 2048
+    
+    tools:
+      - web_search
+      - knowledge_base
+
+# === MCP (Model Context Protocol) ===
+
+mcp:
+  enabled: true
+  config_file: "mcp_config.json"
+
+# === DATA PROVIDERS ===
+
+data_providers:
+  mock:
+    random_mode: true
+    update_interval: 30  # secondes
+    team_size:
+      min: 3
+      max: 10
+  
+  api:
+    base_url: "http://localhost:8000"  # À configurer
+    timeout: 30
+
+# === SYSTÈME ===
+
+system:
+  log_level: "INFO"
+  save_history: true
+  history_dir: "chat_histories"

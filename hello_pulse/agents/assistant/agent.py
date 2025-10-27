@@ -16,6 +16,7 @@ from pydantic_ai.settings import ModelSettings
 from hello_pulse.config import Config
 from hello_pulse.agents.assistant.dependencies import AssistantDeps
 from hello_pulse.mcp.mcp_config_loader import MCPConfigLoader
+from hello_pulse.mcp.mcp_loader_utils import load_mcp_servers_for_agent
 
 # Charger la configuration depuis config.yml
 config = Config()
@@ -23,41 +24,16 @@ assistant_config = config.get('agents.assistant', {})
 model_config = assistant_config.get('model', {})
 
 # Charger les serveurs MCP depuis config.yml
-mcp_loader = MCPConfigLoader()
-mcp_servers = []
-
-# Récupérer la liste des tools MCP depuis config.yml
 tools_mcp_list = assistant_config.get('tools_mcp', [])
-
-print(f"🔧 Configuration Assistant:")
-print(f"   - Tools MCP demandés: {tools_mcp_list}")
-print(f"   - MCP activé: {mcp_loader.is_enabled()}")
-print(f"   - Serveurs disponibles: {mcp_loader.get_server_names()}")
-
-# Charger chaque serveur MCP spécifié dans la config
-for tool_name in tools_mcp_list:
-    if tool_name in mcp_loader.get_server_names():
-        try:
-            server = mcp_loader.load_server(tool_name)
-            if server:
-                mcp_servers.append(server)
-                print(f"   ✅ {tool_name} chargé")
-            else:
-                print(f"   ⚠️  {tool_name} retourne None")
-        except Exception as e:
-            print(f"   ❌ Erreur lors du chargement de {tool_name}: {e}")
-    else:
-        print(f"   ⚠️  {tool_name} non trouvé dans mcp_config.json")
-
-print(f"   → Total MCP servers chargés: {len(mcp_servers)}\n")
+mcp_servers = load_mcp_servers_for_agent(tools_mcp_list, "Assistant")
 
 # Créer l'agent assistant avec configuration
 assistant_agent = Agent(
     model=model_config.get('name', 'gemini-2.0-flash'),
     deps_type=AssistantDeps,
-    output_type=str,  # Réponses en texte simple pour Phase 1
+    output_type=str,
     name="assistant_agent",
-    toolsets=mcp_servers,  # MCP servers (Tavily) comme toolsets
+    toolsets=mcp_servers,
     retries=2,
     model_settings=ModelSettings(
         temperature=model_config.get('temperature', 0.6),

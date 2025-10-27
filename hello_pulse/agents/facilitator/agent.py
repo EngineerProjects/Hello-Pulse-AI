@@ -7,6 +7,7 @@ import os
 
 from hello_pulse.models.schemas import AgentResponse, PostureType
 from hello_pulse.agents.facilitator.dependencies import FacilitatorDeps
+from pydantic_ai.settings import ModelSettings
 
 
 # Charger la configuration depuis config.yml
@@ -22,16 +23,20 @@ facilitator_agent = Agent(
     output_type=AgentResponse,
     name="facilitator_agent",
     retries=2,
+    model_settings=ModelSettings(
+        temperature=model_config.get('temperature', 0.7),
+        max_tokens=model_config.get('max_tokens', 2048),
+    ),
+    instrument=True,
 )
 
-
-@facilitator_agent.system_prompt
+@facilitator_agent.instructions
 def base_instructions(ctx: RunContext[FacilitatorDeps]) -> str:
     """Instructions de base statiques"""
     return ctx.deps.prompts.get_base_instructions()
 
 
-@facilitator_agent.system_prompt
+@facilitator_agent.instructions
 def dynamic_posture_instructions(ctx: RunContext[FacilitatorDeps]) -> str:
     """Instructions dynamiques selon la posture actuelle"""
     posture = ctx.deps.current_posture.value
@@ -42,7 +47,7 @@ Posture actuelle : {posture.upper()}
 """
 
 
-@facilitator_agent.system_prompt
+@facilitator_agent.instructions
 async def session_context_prompt(ctx: RunContext[FacilitatorDeps]) -> str:
     """Contexte de la session actuelle"""
     # Récupérer le contexte depuis le data provider
@@ -118,9 +123,15 @@ async def get_participant_info(
 
 
 # Fonction helper pour changer de posture
-async def change_posture(
+def change_posture(
     new_posture: PostureType,
     deps: FacilitatorDeps
 ) -> None:
-    """Change la posture de l'agent"""
+    """
+    Change la posture de l'agent facilitateur.
+    
+    Args:
+        new_posture: Nouvelle posture à appliquer
+        deps: Dépendances du facilitateur contenant la posture actuelle
+    """
     deps.current_posture = new_posture

@@ -7,15 +7,16 @@ from typing import Optional, Literal
 import json
 from hello_pulse.chat.sessions.session_factory import (
     create_facilitator_session,
-    create_assistant_session
+    create_assistant_session,
+    create_general_session
 )
 from hello_pulse.chat.agent_handlers import (
     FacilitatorHandler,
     AssistantHandler,
-    StudioHandler
+    GeneralHandler
 )
 
-AgentType = Literal['assistant', 'facilitator', 'studio']
+AgentType = Literal['assistant', 'facilitator', 'general']
 
 
 class SessionManager:
@@ -46,7 +47,7 @@ class SessionManager:
         Crée une nouvelle session pour un agent donné.
         
         Args:
-            agent_type: Type d'agent ('assistant', 'facilitator', 'studio')
+            agent_type: Type d'agent ('assistant', 'facilitator', 'general')
             session_id: ID personnalisé (optionnel, généré automatiquement sinon)
             
         Returns:
@@ -65,9 +66,9 @@ class SessionManager:
             session = create_facilitator_session(session_id=session_id)
             handler = FacilitatorHandler(session)
         
-        elif agent_type == 'studio':
-            # Studio pas encore implémenté
-            raise NotImplementedError("L'agent Studio n'est pas encore disponible")
+        elif agent_type == 'general':
+            session = create_general_session(session_id=session_id)
+            handler = GeneralHandler(session)
         
         else:
             raise ValueError(f"Type d'agent inconnu: {agent_type}")

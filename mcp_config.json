@@ -1,5 +1,23 @@
 {
+    "serverConfig": {
+    "command": "/bin/sh",
+    "args": [
+      "-c"
+    ]
+  },
   "mcpServers": {
+    "desktop-commander": {
+      "command": "npx",
+      "args": [
+        "@wonderwhy-er/desktop-commander@latest"
+      ]
+    },
+    "chrome": {
+      "command": "node",
+      "args": [
+        "/home/amiche/.nvm/versions/node/v22.21.0/lib/node_modules/mcp-chrome-bridge/dist/mcp/mcp-server-stdio.js"
+      ]
+    },
     "tavily": {
       "command": "python",
       "args": ["-m", "mcp_server_tavily"],

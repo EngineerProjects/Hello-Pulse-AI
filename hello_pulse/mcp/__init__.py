@@ -20,6 +20,8 @@ from hello_pulse.mcp.mcp_config_loader import (
     load_canva_servers
 )
 
+from hello_pulse.mcp.mcp_loader_utils import load_mcp_servers_for_agent
+
 __all__ = [
     # Client manager
     'MCPManager',
@@ -28,4 +30,6 @@ __all__ = [
     'MCPConfigLoader',
     'load_mcp_servers',      # Pour Studio AI (tous les serveurs)
     'load_canva_servers',    # Pour Canvas/Facilitateur (subset)
+
+    'load_mcp_servers_for_agent'  # Chargement spécifique par agent
 ]

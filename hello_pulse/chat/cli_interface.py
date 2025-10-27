@@ -32,12 +32,7 @@ class UnifiedCLI:
         self.running = True
     
     def select_agent(self) -> Optional[AgentType]:
-        """
-        Affiche le menu de sélection d'agent et retourne le choix.
-        
-        Returns:
-            Type d'agent choisi ou None pour quitter
-        """
+        """Affiche le menu de sélection d'agent et retourne le choix."""
         print_agent_selection()
         
         choice = input(f"{Colors.CYAN}Choisir un agent (0-3): {Colors.RESET}").strip()
@@ -45,7 +40,7 @@ class UnifiedCLI:
         agent_map = {
             '1': 'assistant',
             '2': 'facilitator',
-            '3': 'studio'
+            '3': 'general'  
         }
         
         if choice == '0':

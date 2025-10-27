@@ -14,7 +14,10 @@ from hello_pulse.models.schemas import PostureType
 from hello_pulse.prompts.facilitator.prompts import FacilitatorPrompts
 from hello_pulse.prompts.assistant import AssistantPrompts
 from hello_pulse.config import Config
-
+from hello_pulse.chat.sessions.general_session import GeneralChatSession
+from hello_pulse.agents.general.agent import general_agent
+from hello_pulse.agents.general.dependencies import GeneralDeps
+from hello_pulse.prompts.general import GeneralPrompts
 
 async def create_facilitator_deps(
     data_provider: BaseDataProvider,
@@ -165,6 +168,91 @@ def create_assistant_session(
             user_id=session._user_id,
             user_role=session._user_role,
             session_phase=session._session_phase  # Valeur actuelle au moment de l'appel
+        )
+    
+    # Remplacer par la vraie factory
+    session.agent_deps_factory = deps_factory
+    
+    return session
+
+# ============================================================================
+# GENERAL AGENT FACTORIES
+# ============================================================================
+
+async def create_general_deps(
+    prompts: GeneralPrompts,
+    http_client: httpx.AsyncClient,
+    session_id: str,
+    user_id: str = "user",
+    task_description: str = None,
+    max_iterations: int = 20,
+    current_iteration: int = 0
+) -> GeneralDeps:
+    """
+    Factory pour créer les dépendances du general agent.
+    
+    Args:
+        prompts: Gestionnaire de prompts
+        http_client: Client HTTP async
+        session_id: ID de la session
+        user_id: ID de l'utilisateur
+        task_description: Description de la tâche à accomplir
+        max_iterations: Nombre max d'itérations autorisées
+        current_iteration: Itération actuelle
+        
+    Returns:
+        GeneralDeps configurées
+    """
+    return GeneralDeps(
+        prompts=prompts,
+        http_client=http_client,
+        session_id=session_id,
+        user_id=user_id,
+        task_description=task_description,
+        max_iterations=max_iterations,
+        current_iteration=current_iteration
+    )
+
+
+def create_general_session(
+    session_id: str = "general-session",
+    user_id: str = "user"
+) -> GeneralChatSession:
+    """
+    Crée une session de chat avec l'agent general.
+    
+    Args:
+        session_id: ID de la session
+        user_id: ID de l'utilisateur
+        
+    Returns:
+        GeneralChatSession configurée pour le general
+    """
+    prompts = GeneralPrompts()
+    
+    # Le general n'a pas besoin de data provider
+    # On crée un mock vide juste pour la compatibilité
+    data_provider = MockDataProvider(session_id=session_id, random_mode=False)
+    
+    # Créer la session
+    session = GeneralChatSession(
+        agent=general_agent,
+        agent_deps_factory=lambda dp, hc: None,  # Placeholder temporaire
+        data_provider=data_provider,
+        session_id=session_id,
+        user_id=user_id
+    )
+    
+    # Factory qui capture la session et utilise ses valeurs ACTUELLES
+    async def deps_factory(data_provider, http_client):
+        return await create_general_deps(
+            prompts=prompts,
+            http_client=http_client,
+            session_id=session.session_id,
+            user_id=session._user_id,
+            task_description=session._current_task,
+            max_iterations=session._max_iterations,
+            current_iteration=session._current_iteration
         )
     
     # Remplacer par la vraie factory

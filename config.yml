@@ -62,9 +62,9 @@ agents:
       # - knowledge_base    # (Futur) RAG
 
   # ========================================
-  # STUDIO AI - Agent Studio (Avancé)
+  # GENERAL AI - Agent Général (Avancé)
   # ========================================
-  studio:
+  general:
     model:
       name: "gemini-2.0-flash"
       temperature: 0.8  # Plus créatif pour génération
@@ -78,6 +78,8 @@ agents:
     
     tools_mcp:
       - tavily                  # Web search avancée
+      - chrome                  # Utilisation du navigateur
+      - desktop-commander
       # - knowledge_base        # (Futur) RAG complet
       # - dalle3                # (Futur) Génération images complexes
       # - code_execution        # (Futur) Exécution code

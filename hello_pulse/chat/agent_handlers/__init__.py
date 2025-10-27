@@ -1,14 +1,14 @@
 """
-Handlers pour les différents agents
+Handlers CLI pour tous les agents
 """
-from .base_handler import BaseAgentHandler
-from .facilitator_handler import FacilitatorHandler
-from .assistant_handler import AssistantHandler
-from .studio_handler import StudioHandler
+from hello_pulse.chat.agent_handlers.facilitator_handler import FacilitatorHandler
+from hello_pulse.chat.agent_handlers.assistant_handler import AssistantHandler
+from hello_pulse.chat.agent_handlers.general_handler import GeneralHandler
+from hello_pulse.chat.agent_handlers.studio_handler import StudioHandler
 
 __all__ = [
-    'BaseAgentHandler',
     'FacilitatorHandler',
     'AssistantHandler',
+    'GeneralHandler',
     'StudioHandler'
 ]

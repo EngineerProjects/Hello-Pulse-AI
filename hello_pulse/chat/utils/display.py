@@ -24,14 +24,13 @@ def print_banner():
 
 def print_agent_selection():
     """Affiche le menu de sélection d'agent"""
-    print(f"\n{Colors.BOLD}🤖 CHOISIR UN AGENT:{Colors.RESET}")
-    print(f"  {Colors.GREEN}1{Colors.RESET} - 💬 Assistant (réactif - Q&A + recherche web)")
-    print(f"  {Colors.GREEN}2{Colors.RESET} - 🎭 Facilitateur (proactif - monitoring sessions)")
-    print(f"  {Colors.GRAY}3{Colors.RESET} - 🤖 Studio (bientôt disponible)")
-    print(f"  {Colors.RED}0{Colors.RESET} - ❌ Quitter")
-    print()
+    print(f"\n{Colors.BOLD}🎯 CHOISIR UN AGENT:{Colors.RESET}\n")
+    print(f"  {Colors.CYAN}1{Colors.RESET} - 💬 Assistant  : Q&A rapide + recherche web")
+    print(f"  {Colors.CYAN}2{Colors.RESET} - 🎭 Facilitateur: Accompagnement sessions collaboratives")
+    print(f"  {Colors.CYAN}3{Colors.RESET} - 🤖 General    : Tâches complexes autonomes")
+    print(f"  {Colors.CYAN}0{Colors.RESET} - 👋 Quitter\n")
 
-
+    
 def print_help(agent_type: str):
     """
     Affiche l'aide des commandes selon l'agent

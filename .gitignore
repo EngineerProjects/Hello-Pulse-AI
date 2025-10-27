@@ -150,8 +150,11 @@ docker-compose.override.yml
 # --- Optional: ignore local environment config ---
 *.env.local
 .envrc
-.env.*
+.env
 .envrc
 
 # --- Ignore chat histories ---
 chat_histories
+
+# --- Ignore session files (but keep the folder) ---
+hello_pulse/chat/sessions/*.json

@@ -4,6 +4,9 @@
 # === AGENTS ===
 
 agents:
+  # ========================================
+  # CANVAS - Agent Facilitateur (Proactif)
+  # ========================================
   facilitator:
     model:
       name: "gemini-2.0-flash"
@@ -32,16 +35,54 @@ agents:
         dominant_threshold: 0.5  # 50% de participation
         energy_drop_warning: 0.3  # 30% de baisse
         energy_drop_critical: 0.5  # 50% de baisse
+    
+    tools_mcp: []  # Pas de tools MCP (uniquement tools internes)
 
-  general:
+  # ========================================
+  # CANVAS - Agent Assistant (Réactif)
+  # ========================================
+  assistant:
     model:
       name: "gemini-2.0-flash"
-      temperature: 0.5
+      temperature: 0.6  # Plus factuel que facilitateur
       max_tokens: 2048
     
-    tools:
-      - web_search
-      - knowledge_base
+    behavior:
+      reactive: true
+      concise_answers: true
+    
+    capabilities:
+      qa: true                # Q&A conversationnel
+      web_search: true        # Recherche web via Tavily
+      knowledge_base: true    # RAG (méthodologies + entreprise)
+      simple_image_gen: false # (Futur) Génération images simples
+    
+    tools_mcp:
+      - tavily              # Web search
+      # - knowledge_base    # (Futur) RAG
+
+  # ========================================
+  # STUDIO AI - Agent Studio (Avancé)
+  # ========================================
+  studio:
+    model:
+      name: "gemini-2.0-flash"
+      temperature: 0.8  # Plus créatif pour génération
+      max_tokens: 8192  # Plus de tokens pour contenu long
+    
+    capabilities:
+      deep_research: true       # Recherche multi-sources approfondie
+      mass_generation: true     # SCAMPER 50+ variations
+      advanced_prototyping: true # Prototypes complexes
+      agent_builder: false      # (Futur) Builder agents custom
+    
+    tools_mcp:
+      - tavily                  # Web search avancée
+      # - knowledge_base        # (Futur) RAG complet
+      # - dalle3                # (Futur) Génération images complexes
+      # - code_execution        # (Futur) Exécution code
+      # - 3d_generation         # (Futur) Modèles 3D
+      # - web_browser           # (Futur) Navigation web complète
 
 # === MCP (Model Context Protocol) ===
 

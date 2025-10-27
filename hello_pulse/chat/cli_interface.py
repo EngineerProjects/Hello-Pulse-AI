@@ -1,244 +1,295 @@
 """
-Interface CLI pour tester l'agent facilitateur
+Interface CLI universelle pour Hello Pulse
+
+Interface générique permettant d'utiliser différents agents :
+- 💬 Assistant (réactif, Q&A + recherche web)
+- 🎭 Facilitateur (proactif, monitoring sessions)
+- 🤖 Studio (futur - recherche approfondie)
 """
 import asyncio
-from datetime import datetime
-from hello_pulse.chat.session_factory import create_facilitator_session
-from hello_pulse.models.schemas import PostureType, MonitoringMetrics
+from typing import Optional
+from hello_pulse.chat.sessions.session_manager import SessionManager, AgentType
+from hello_pulse.chat.utils import (
+    Colors,
+    print_banner,
+    print_agent_selection,
+    print_help,
+    print_session_header,
+    print_message,
+    print_error,
+    print_success,
+    print_info,
+    clear_screen
+)
 
 
-class Colors:
-    """Codes ANSI pour les couleurs dans le terminal"""
-    RESET = '\033[0m'
-    BOLD = '\033[1m'
-    GREEN = '\033[92m'
-    BLUE = '\033[94m'
-    YELLOW = '\033[93m'
-    RED = '\033[91m'
-    CYAN = '\033[96m'
-    MAGENTA = '\033[95m'
-
-
-def print_banner():
-    """Affiche la bannière de bienvenue"""
-    print(f"\n{Colors.BOLD}{Colors.CYAN}")
-    print("╔══════════════════════════════════════════════════════════╗")
-    print("║                                                          ║")
-    print("║            🎯 HELLO PULSE - CHAT INTERFACE              ║")
-    print("║              Agent Facilitateur IA                       ║")
-    print("║                                                          ║")
-    print("╚══════════════════════════════════════════════════════════╝")
-    print(f"{Colors.RESET}\n")
-
-
-def print_help():
-    """Affiche l'aide des commandes"""
-    print(f"\n{Colors.BOLD}📖 COMMANDES DISPONIBLES:{Colors.RESET}")
-    print(f"  {Colors.GREEN}/help{Colors.RESET}        - Afficher cette aide")
-    print(f"  {Colors.GREEN}/posture{Colors.RESET}     - Changer la posture de l'agent")
-    print(f"  {Colors.GREEN}/history{Colors.RESET}     - Afficher l'historique")
-    print(f"  {Colors.GREEN}/stats{Colors.RESET}       - Afficher les statistiques")
-    print(f"  {Colors.GREEN}/context{Colors.RESET}     - Afficher le contexte de session")
-    print(f"  {Colors.GREEN}/clear{Colors.RESET}       - Effacer l'historique")
-    print(f"  {Colors.GREEN}/debug{Colors.RESET}       - Activer/désactiver le mode debug")
-    print(f"  {Colors.GREEN}/quit{Colors.RESET}        - Quitter le chat")
-    print()
-
-
-def print_posture_menu():
-    """Affiche le menu de sélection de posture"""
-    print(f"\n{Colors.BOLD}🎭 CHOISIR UNE POSTURE:{Colors.RESET}")
-    print(f"  {Colors.YELLOW}1{Colors.RESET} - Guide (encourageant, créatif)")
-    print(f"  {Colors.YELLOW}2{Colors.RESET} - Provocateur (challenging, stimulant)")
-    print(f"  {Colors.YELLOW}3{Colors.RESET} - Médiateur (apaisant, neutre)")
-    print(f"  {Colors.YELLOW}4{Colors.RESET} - Timekeeper (organisé, orienté temps)")
-    print()
-
-
-async def print_context(session):
-    """Affiche le contexte de la session"""
-    ctx = await session.get_session_context()
-    metrics = ctx.metrics
+class UnifiedCLI:
+    """Interface CLI unifiée pour tous les agents"""
     
-    print(f"\n{Colors.BOLD}🎯 CONTEXTE DE SESSION:{Colors.RESET}")
-    print(f"  Session ID: {Colors.CYAN}{ctx.session_id}{Colors.RESET}")
-    print(f"  Phase: {Colors.MAGENTA}{ctx.phase}{Colors.RESET}")
-    print(f"  Posture actuelle: {Colors.YELLOW}{session.current_posture.value}{Colors.RESET}")
-    print(f"\n  {Colors.BOLD}Participants:{Colors.RESET}")
-    for p in ctx.participants:
-        user_id = p['id']
-        participation = metrics.participation_rate.get(user_id, 0)
-        silence = metrics.silence_duration.get(user_id, 0)
-        print(f"    • {p['name']} - {participation:.0f}% participation, "
-              f"silence: {silence}s")
+    def __init__(self):
+        self.session_manager = SessionManager()
+        self.debug_mode = False
+        self.running = True
     
-    print(f"\n  {Colors.BOLD}Métriques:{Colors.RESET}")
-    print(f"    Énergie du groupe: {Colors.GREEN}{metrics.energy_level:.0f}%{Colors.RESET}")
-    print(f"    Idées générées: {Colors.CYAN}{metrics.total_ideas}{Colors.RESET}")
-    print(f"    Durée de phase: {Colors.YELLOW}{metrics.phase_duration}s{Colors.RESET}")
-    print(f"    Score d'alerte: {Colors.RED}{metrics.alert_score}{Colors.RESET}")
-    print()
-
-
-async def handle_command(command: str, session, debug_mode: bool) -> tuple[bool, bool]:
-    """
-    Gère les commandes spéciales
-    
-    Returns:
-        (should_continue, new_debug_mode)
-    """
-    if command == '/quit':
-        print(f"{Colors.YELLOW}👋 Au revoir !{Colors.RESET}\n")
-        return False, debug_mode
-    
-    elif command == '/help':
-        print_help()
-    
-    elif command == '/posture':
-        print_posture_menu()
-        choice = input(f"{Colors.CYAN}Choisir (1-4): {Colors.RESET}")
-        postures = [
-            PostureType.GUIDE,
-            PostureType.PROVOCATEUR,
-            PostureType.MEDIATEUR,
-            PostureType.TIMEKEEPER
-        ]
-        try:
-            idx = int(choice) - 1
-            if 0 <= idx < len(postures):
-                await session.change_posture(postures[idx])
-            else:
-                print(f"{Colors.RED}❌ Choix invalide{Colors.RESET}")
-        except ValueError:
-            print(f"{Colors.RED}❌ Entrée invalide{Colors.RESET}")
-    
-    elif command == '/history':
-        session.print_history()
-    
-    elif command == '/stats':
-        stats = session.get_stats()
-        print(f"\n{Colors.BOLD}📊 STATISTIQUES:{Colors.RESET}")
-        for key, value in stats.items():
-            print(f"  {key}: {Colors.CYAN}{value}{Colors.RESET}")
-        print()
-    
-    elif command == '/context':
-        await print_context(session)
-    
-    elif command == '/clear':
-        session.clear_history()
-    
-    elif command == '/debug':
-        debug_mode = not debug_mode
-        status = "activé" if debug_mode else "désactivé"
-        print(f"🐛 Mode debug {status}")
-    
-    else:
-        print(f"{Colors.RED}❌ Commande inconnue. Tapez /help pour voir les commandes{Colors.RESET}")
-    
-    return True, debug_mode
-
-
-def print_agent_response(response, debug_mode: bool = False):
-    """Affiche la réponse de l'agent"""
-    # Icône selon le type de message
-    icon_map = {
-        'public': '📢',
-        'private': '🔒',
-        'system': '⚙️'
-    }
-    icon = icon_map.get(response.message_type.value, '🤖')
-    
-    # Affichage principal
-    print(f"\n{Colors.BOLD}{Colors.GREEN}{icon} Agent:{Colors.RESET}")
-    print(f"  {response.message}\n")
-    
-    # Mode debug : affiche toutes les infos structurées
-    if debug_mode:
-        print(f"{Colors.BLUE}🐛 DEBUG INFO:{Colors.RESET}")
-        print(f"  Message Type: {response.message_type.value}")
-        print(f"  Posture: {response.current_posture.value}")
-        if response.intervention_type:
-            print(f"  Intervention: {response.intervention_type.value}")
-        if response.target_user_id:
-            print(f"  Cible: {response.target_user_id}")
-        print()
-
-
-async def chat_loop():
-    """Boucle principale du chat"""
-    print_banner()
-    print(f"{Colors.CYAN}💡 Tapez /help pour voir les commandes disponibles{Colors.RESET}\n")
-    
-    # Créer une session de chat avec la factory
-    session_id = f"session-{datetime.now().strftime('%Y%m%d-%H%M%S')}"
-    debug_mode = False
-    
-    session = create_facilitator_session(session_id=session_id)
-    
-    async with session:
-        print(f"✅ Session démarrée : {Colors.CYAN}{session_id}{Colors.RESET}")
-        print(f"🎭 Posture initiale : {Colors.YELLOW}{session.current_posture.value}{Colors.RESET}\n")
+    def select_agent(self) -> Optional[AgentType]:
+        """
+        Affiche le menu de sélection d'agent et retourne le choix.
         
-        running = True
-        while running:
+        Returns:
+            Type d'agent choisi ou None pour quitter
+        """
+        print_agent_selection()
+        
+        choice = input(f"{Colors.CYAN}Choisir un agent (0-3): {Colors.RESET}").strip()
+        
+        agent_map = {
+            '1': 'assistant',
+            '2': 'facilitator',
+            '3': 'studio'
+        }
+        
+        if choice == '0':
+            return None
+        
+        if choice in agent_map:
+            return agent_map[choice]
+        
+        print_error("Choix invalide")
+        return self.select_agent()
+    
+    async def handle_general_commands(self, command: str) -> bool:
+        """
+        Gère les commandes générales (communes à tous les agents).
+        
+        Args:
+            command: Commande à traiter
+            
+        Returns:
+            True si la session doit continuer, False pour quitter
+        """
+        if command == '/quit' or command == '/exit':
+            self.running = False
+            return False
+        
+        elif command == '/help':
+            agent_type = self.session_manager.current_agent_type or 'unknown'
+            print_help(agent_type)
+            
+            # Afficher aussi les commandes spécifiques de l'agent
+            if self.session_manager.current_handler:
+                handler = self.session_manager.current_handler
+                print(f"\n{Colors.BOLD}{handler.agent_emoji} Commandes spécifiques - {handler.agent_name}:{Colors.RESET}")
+                for cmd, desc in handler.get_available_commands().items():
+                    print(f"  {Colors.YELLOW}{cmd}{Colors.RESET} - {desc}")
+                print()
+        
+        elif command == '/switch':
+            await self.switch_agent()
+        
+        elif command == '/new':
+            await self.new_session()
+        
+        elif command == '/debug':
+            self.debug_mode = not self.debug_mode
+            status = "activé" if self.debug_mode else "désactivé"
+            print_info(f"Mode debug {status}")
+        
+        elif command == '/history':
+            self.show_history()
+        
+        elif command == '/stats':
+            self.show_stats()
+        
+        elif command == '/clear':
+            if self.session_manager.current_session:
+                self.session_manager.current_session.clear_history()
+                print_success("Historique effacé")
+        
+        else:
+            return True  # Commande non reconnue, passer au handler de l'agent
+        
+        return True
+    
+    async def switch_agent(self):
+        """Change d'agent en cours de session"""
+        print_info("Changement d'agent...")
+        agent_type = self.select_agent()
+        
+        if agent_type is None:
+            return
+        
+        try:
+            # Nettoyer l'ancienne session
+            await self.session_manager.cleanup_current_session()
+            
+            session, handler = self.session_manager.switch_agent(agent_type)
+            print_success(f"Agent changé vers: {handler.agent_emoji} {handler.agent_name}")
+            print_session_header(handler.agent_name, session.session_id)
+        except NotImplementedError as e:
+            print_error(str(e))
+    
+    async def new_session(self):
+        """Démarre une nouvelle session avec le même agent"""
+        if not self.session_manager.current_agent_type:
+            print_error("Aucun agent actif")
+            return
+        
+        agent_type = self.session_manager.current_agent_type
+        session, handler = self.session_manager.create_session(agent_type)
+        print_success("Nouvelle session créée")
+        print_session_header(handler.agent_name, session.session_id)
+    
+    def show_history(self):
+        """Affiche l'historique de la conversation"""
+        if not self.session_manager.current_session:
+            print_error("Aucune session active")
+            return
+        
+        history = self.session_manager.current_session.history
+        
+        if not history:
+            print_info("Historique vide")
+            return
+        
+        print(f"\n{Colors.BOLD}📜 HISTORIQUE DE LA CONVERSATION:{Colors.RESET}")
+        for i, msg in enumerate(history, 1):
+            role_str = "Vous" if msg.role == "user" else msg.agent_name or "Agent"
+            timestamp = msg.timestamp.strftime("%H:%M:%S")
+            print(f"\n{Colors.GRAY}[{i}] {timestamp}{Colors.RESET}")
+            print(f"{Colors.BOLD}{role_str}:{Colors.RESET} {msg.content[:100]}...")
+        print()
+    
+    def show_stats(self):
+        """Affiche les statistiques de la session"""
+        if not self.session_manager.current_session:
+            print_error("Aucune session active")
+            return
+        
+        session = self.session_manager.current_session
+        handler = self.session_manager.current_handler
+        
+        print(f"\n{Colors.BOLD}📊 STATISTIQUES DE SESSION:{Colors.RESET}")
+        print(f"  Agent: {handler.agent_emoji} {handler.agent_name}")
+        print(f"  Session ID: {Colors.CYAN}{session.session_id}{Colors.RESET}")
+        print(f"  Messages: {Colors.GREEN}{len(session.history)}{Colors.RESET}")
+        print(f"  Logs: {Colors.YELLOW}{session.get_log_path()}{Colors.RESET}")
+        print()
+    
+    async def chat_loop(self):
+        """Boucle principale du chat"""
+        session = self.session_manager.current_session
+        handler = self.session_manager.current_handler
+        
+        if not session or not handler:
+            print_error("Aucune session active")
+            return
+        
+        print_session_header(handler.agent_name, session.session_id)
+        print_info("Tapez '/help' pour voir les commandes disponibles\n")
+        
+        while self.running:
             try:
-                # Prompt utilisateur
-                user_input = input(f"{Colors.BOLD}{Colors.BLUE}Vous > {Colors.RESET}").strip()
+                # Demander l'input utilisateur
+                user_input = input(f"{Colors.BOLD}{Colors.GREEN}Vous:{Colors.RESET} ").strip()
                 
-                # Ignorer les entrées vides
                 if not user_input:
                     continue
                 
-                # Gérer les commandes
+                # Vérifier si c'est une commande
                 if user_input.startswith('/'):
-                    running, debug_mode = await handle_command(user_input, session, debug_mode)
+                    # Commandes générales
+                    should_continue = await self.handle_general_commands(user_input)
+                    
+                    if not should_continue:
+                        break
+                    
+                    # Si la commande n'a pas été traitée, essayer avec le handler de l'agent
+                    if should_continue is True:
+                        handled = await handler.handle_command(user_input)
+                        if not handled:
+                            print_error(f"Commande inconnue: {user_input}")
+                    
                     continue
                 
-                # Envoyer le message à l'agent
-                print(f"{Colors.YELLOW}⏳ Agent en train de réfléchir...{Colors.RESET}", end='\r')
+                # Sinon, c'est un message normal - envoyer à l'agent
+                print(f"{Colors.BOLD}{Colors.CYAN}{handler.agent_name}:{Colors.RESET} ", end='', flush=True)
                 
-                try:
-                    response = await session.send_message(user_input)
-                    print(" " * 50, end='\r')  # Effacer le message de chargement
-                    print_agent_response(response, debug_mode)
+                response = await session.chat(user_input)
+                
+                # Afficher la réponse
+                if response and hasattr(response, 'content'):
+                    print(response.content)
                     
-                except Exception as e:
-                    print(" " * 50, end='\r')
-                    error_msg = str(e).lower()
-                    
-                    # Messages d'erreur spécifiques pour les cas courants
-                    if "503" in error_msg or "overloaded" in error_msg:
-                        print(f"\n{Colors.RED}❌ Le modèle Gemini est temporairement surchargé.{Colors.RESET}")
-                        print(f"{Colors.YELLOW}💡 Réessayez dans quelques secondes...{Colors.RESET}\n")
-                    elif "rate_limit" in error_msg or "quota" in error_msg:
-                        print(f"\n{Colors.RED}❌ Limite d'utilisation atteinte.{Colors.RESET}")
-                        print(f"{Colors.YELLOW}💡 Attendez quelques minutes avant de réessayer.{Colors.RESET}\n")
-                    elif "api_key" in error_msg or "apikey" in error_msg:
-                        print(f"\n{Colors.RED}❌ Problème avec la clé API.{Colors.RESET}")
-                        print(f"{Colors.YELLOW}💡 Vérifiez votre fichier .env{Colors.RESET}\n")
-                    else:
-                        print(f"\n{Colors.RED}❌ Erreur : {e}{Colors.RESET}\n")
-            
+                    # Debug mode
+                    if self.debug_mode and hasattr(response, 'data'):
+                        print(f"\n{Colors.GRAY}[DEBUG] Response data: {response.data}{Colors.RESET}")
+                else:
+                    print(response)
+                
+                print()  # Ligne vide après chaque réponse
+                
             except KeyboardInterrupt:
-                print(f"\n\n{Colors.YELLOW}🛑 Interruption détectée{Colors.RESET}")
-                confirm = input(f"Voulez-vous vraiment quitter ? (o/n) : ").lower()
-                if confirm == 'o':
-                    print(f"{Colors.YELLOW}👋 Au revoir !{Colors.RESET}\n")
+                print(f"\n{Colors.YELLOW}Interruption détectée{Colors.RESET}")
+                confirm = input("Voulez-vous vraiment quitter? (o/N): ").strip().lower()
+                if confirm in ['o', 'oui', 'y', 'yes']:
                     break
             
-            except EOFError:
-                # Ctrl+D pressé
-                print(f"\n{Colors.YELLOW}👋 Au revoir !{Colors.RESET}\n")
-                break
+            except Exception as e:
+                print_error(f"Erreur: {e}")
+                if self.debug_mode:
+                    import traceback
+                    traceback.print_exc()
+        
+        # Nettoyer la session avant de quitter
+        session = self.session_manager.current_session
+        await self.session_manager.cleanup_current_session()
+        
+        # Afficher le chemin du fichier de logs
+        if session:
+            log_path = session.get_log_path()
+            print_success(f"Session terminée!")
+            print_info(f"📊 Logs sauvegardés: {log_path}")
+        else:
+            print_info("Session sauvegardée. Au revoir! 👋")
+    
+    async def run(self):
+        """Point d'entrée principal du CLI"""
+        clear_screen()
+        print_banner()
+        
+        # Sélection de l'agent
+        agent_type = self.select_agent()
+        
+        if agent_type is None:
+            print_info("Au revoir! 👋")
+            return
+        
+        # Créer la session
+        try:
+            session, handler = self.session_manager.create_session(agent_type)
+            print_success(f"Session créée avec {handler.agent_emoji} {handler.agent_name}")
+        except NotImplementedError as e:
+            print_error(str(e))
+            return
+        
+        # Lancer la boucle de chat
+        await self.chat_loop()
 
+
+# ============================================================================
+# FONCTION PRINCIPALE
+# ============================================================================
 
 def main():
-    """Point d'entrée principal"""
+    """Point d'entrée du programme"""
+    cli = UnifiedCLI()
+    
     try:
-        asyncio.run(chat_loop())
+        asyncio.run(cli.run())
     except KeyboardInterrupt:
-        print(f"\n{Colors.YELLOW}👋 Au revoir !{Colors.RESET}\n")
+        print(f"\n{Colors.YELLOW}Programme interrompu{Colors.RESET}")
+    except Exception as e:
+        print(f"{Colors.RED}Erreur fatale: {e}{Colors.RESET}")
 
 
 if __name__ == "__main__":

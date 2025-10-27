@@ -5,7 +5,7 @@ Cette classe étend ChatSession avec des fonctionnalités spécifiques
 au facilitateur comme la gestion des postures et l'accès au contexte.
 """
 from typing import Optional
-from hello_pulse.chat.chat_session import ChatSession
+from hello_pulse.chat.sessions.chat_session import ChatSession
 from hello_pulse.models.schemas import PostureType, SessionContext
 from hello_pulse.agents.facilitator.dependencies import FacilitatorDeps
 

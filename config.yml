@@ -77,14 +77,7 @@ agents:
       agent_builder: false      # (Futur) Builder agents custom
     
     tools_mcp:
-      - tavily                  # Web search avancée
-      - chrome                  # Utilisation du navigateur
-      - desktop-commander
-      # - knowledge_base        # (Futur) RAG complet
-      # - dalle3                # (Futur) Génération images complexes
-      # - code_execution        # (Futur) Exécution code
-      # - 3d_generation         # (Futur) Modèles 3D
-      # - web_browser           # (Futur) Navigation web complète
+      - "*" # Charger tous les tools MCP définis dans mcp_config.json
 
 # === MCP (Model Context Protocol) ===
 

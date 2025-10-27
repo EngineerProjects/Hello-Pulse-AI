@@ -1,13 +1,13 @@
 """
-Gestionnaire de prompts pour l'agent assistant
+Gestionnaire de prompts pour l'Agent General
 """
 from pathlib import Path
 from hello_pulse.prompts.base_loader import BasePromptLoader
 
 
-class AssistantPrompts(BasePromptLoader):
+class GeneralPrompts(BasePromptLoader):
     """
-    Charge et gère les prompts de l'agent assistant.
+    Charge et gère les prompts de l'agent general.
     Hérite de BasePromptLoader pour la logique de chargement.
     """
     
@@ -21,9 +21,9 @@ class AssistantPrompts(BasePromptLoader):
     
     def get_base_instructions(self) -> str:
         """
-        Récupère les instructions de base de l'assistant.
+        Récupère les instructions de base de l'agent general.
         
         Returns:
-            Instructions complètes pour l'agent assistant
+            Instructions complètes pour l'agent general
         """
         return self.load_prompt('instructions.txt')

@@ -14,6 +14,7 @@ from pydantic_ai.agent import capture_run_messages
 from hello_pulse.models.schemas import PostureType, AgentResponse
 from hello_pulse.data_providers.base_provider import BaseDataProvider
 from hello_pulse.chat.utils import SessionLogger, ToolCall
+from hello_pulse.agents.general.output import GeneralOutput
 
 
 class ChatMessage:
@@ -59,7 +60,6 @@ class ChatMessage:
 class ChatSession:
     """
     Session de chat GÉNÉRIQUE - fonctionne avec n'importe quel agent Pydantic AI.
-    
     Cette classe est découplée des agents spécifiques et utilise le pattern
     de data provider pour récupérer les données de session.
     """
@@ -97,31 +97,17 @@ class ChatSession:
             agent_name=self.agent_name
         )
     
-    async def __aenter__(self):
-        """Context manager entry"""
-        self.http_client = httpx.AsyncClient()
-        return self
-    
-    async def __aexit__(self, exc_type, exc_val, exc_tb):
-        """Context manager exit"""
-        if self.http_client:
-            await self.http_client.aclose()
+    # --- MÉTHODES __aenter__ ET __aexit__ SUPPRIMÉES ---
+    # La gestion du http_client se fait via lazy initialization
+    # et la méthode cleanup()
     
     async def send_message(self, user_message: str) -> Any:
         """
         Envoie un message à l'agent et obtient une réponse.
-        
         CORRECTIONS APPLIQUÉES :
-        - Passe message_history à l'agent pour conserver le contexte
-        - Capture les tool calls avec capture_run_messages()
-        - Affiche les liens de recherche dans le terminal
-        - Log toutes les interactions
-        
-        Args:
-            user_message: Le message de l'utilisateur
-            
-        Returns:
-            La réponse de l'agent (type dépend de l'agent)
+        - Gère le cycle de vie MCP avec `async with`
+        - ✅ CORRECTION: Gère intelligemment le type de sortie 
+        - (GeneralOutput, AgentResponse, ou str) pour un affichage propre.
         """
         # Initialiser le http_client si nécessaire (lazy initialization)
         if not self.http_client:
@@ -137,7 +123,7 @@ class ChatSession:
         
         # Logger le message utilisateur
         self.logger.log_message(role='user', content=user_message)
-        
+
         # Créer les dépendances pour l'agent via la factory
         deps = await self.agent_deps_factory(
             data_provider=self.data_provider,
@@ -146,12 +132,14 @@ class ChatSession:
         
         # Capturer les messages échangés avec l'agent (pour les tool calls)
         with capture_run_messages() as captured_messages:
-            # Appeler l'agent avec l'historique des messages pour conserver le contexte
-            result = await self.agent.run(
-                user_message, 
-                deps=deps,
-                message_history=self.pydantic_messages  # ✅ CORRECTION PRINCIPALE
-            )
+            
+            # Le contexte `async with` est OBLIGATOIRE pour les MCP servers
+            async with self.agent:
+                result = await self.agent.run(
+                    user_message, 
+                    deps=deps,
+                    message_history=self.pydantic_messages
+                )
         
         # Extraire les tools appelés et afficher les liens de recherche
         tool_calls_list = self._process_tool_calls(captured_messages)
@@ -162,18 +150,34 @@ class ChatSession:
         # Extraire la réponse (différent selon le type d'agent)
         response_output = result.output
         
-        # Convertir la réponse en dict si c'est un BaseModel Pydantic
-        response_data = None
-        if hasattr(response_output, 'model_dump'):
-            response_data = response_output.model_dump()
+        # --- ⬇️ DÉBUT DE LA CORRECTION "RÉPONSE BIZARRE" ⬇️ ---
         
-        # Déterminer le message textuel de la réponse
-        if hasattr(response_output, 'message'):
+        response_data = None
+        
+        if isinstance(response_output, GeneralOutput):
+            # Pour l'agent General, le 'result' EST le message pour l'utilisateur
+            response_text = response_output.result
+            response_data = response_output.model_dump()
+            
+        elif hasattr(response_output, 'message'):
+            # Pour l'agent Facilitator (AgentResponse)
             response_text = response_output.message
+            if hasattr(response_output, 'model_dump'):
+                response_data = response_output.model_dump()
+                
         elif isinstance(response_output, str):
+            # Pour l'agent Assistant (output_type=str)
             response_text = response_output
+            
         else:
+            # Fallback (ce qui causait l'erreur)
             response_text = str(response_output)
+        
+        # S'assurer que response_data est peuplé si c'est un pydantic model
+        if response_data is None and hasattr(response_output, 'model_dump'):
+            response_data = response_output.model_dump()
+            
+        # --- ⬆️ FIN DE LA CORRECTION ⬆️ ---
         
         # Ajouter la réponse de l'agent à l'historique
         agent_msg = ChatMessage(
@@ -189,7 +193,7 @@ class ChatSession:
             role='agent',
             content=response_text,
             tool_calls=tool_calls_list,
-            metadata={'response_data': response_data}
+            metadata=response_data 
         )
         
         return response_output
@@ -197,7 +201,6 @@ class ChatSession:
     async def chat(self, user_message: str) -> Any:
         """
         Alias pour send_message() - pour compatibilité avec le CLI.
-        
         Args:
             user_message: Le message de l'utilisateur
             
@@ -210,7 +213,6 @@ class ChatSession:
         """
         Traite les messages capturés pour extraire les tools appelés.
         Affiche également les liens de recherche dans le terminal.
-        
         Args:
             captured_messages: Messages capturés par capture_run_messages()
             
@@ -250,7 +252,7 @@ class ChatSession:
                                 if tc.tool_name in ['tavily_search', 'web_search', 'brave_search']:
                                     links = self._extract_search_links(part.content)
                                     search_links.extend(links)
-                                
+                                    
                                 break
         
         # Afficher les liens de recherche AVANT la réponse de l'agent
@@ -267,7 +269,6 @@ class ChatSession:
     def _extract_search_links(self, tool_result: Any) -> List[str]:
         """
         Extrait les liens depuis le résultat d'un tool de recherche.
-        
         Args:
             tool_result: Résultat du tool (peut être dict, str, ou autre)
             
@@ -347,7 +348,6 @@ class ChatSession:
     def get_log_path(self) -> Path:
         """
         Retourne le chemin du fichier de logs de la session.
-        
         Returns:
             Path vers le fichier de logs
         """

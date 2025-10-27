@@ -7,7 +7,10 @@
   },
   "mcpServers": {
     "desktop-commander": {
-      "command": "/home/amiche/.nvm/versions/node/v22.21.0/bin/desktop-commander"
+      "command": "npx",
+      "args": [
+        "@wonderwhy-er/desktop-commander@latest"
+      ]
     },
     "chrome": {
       "command": "node",

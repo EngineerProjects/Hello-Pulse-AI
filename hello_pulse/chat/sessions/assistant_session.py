@@ -5,7 +5,7 @@ Cette classe étend ChatSession avec des fonctionnalités spécifiques
 à l'assistant comme la gestion du contexte utilisateur.
 """
 from typing import Optional
-from hello_pulse.chat.sessions.chat_session import ChatSession
+from hello_pulse.chat.chat_session import ChatSession
 
 
 class AssistantChatSession(ChatSession):

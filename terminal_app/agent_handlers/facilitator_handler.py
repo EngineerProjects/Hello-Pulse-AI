@@ -2,8 +2,11 @@
 Handler pour l'agent Facilitateur
 """
 from typing import Dict
-from hello_pulse.chat.agent_handlers.base_handler import BaseAgentHandler
-from hello_pulse.chat.utils.colors import Colors
+# Import du handler de base local (corrigé)
+from .base_handler import BaseAgentHandler
+# Import des utils locaux (corrigé)
+from terminal_app.cli_utils.colors import Colors
+# Import depuis le coeur IA (inchangé, car c'est correct)
 from hello_pulse.models.schemas import PostureType
 
 
@@ -61,6 +64,7 @@ class FacilitatorHandler(BaseAgentHandler):
         }
         
         if choice in postures:
+            # self.session est une instance de FacilitatorChatSession (coeur IA)
             await self.session.change_posture(postures[choice])
             print(f"{Colors.GREEN}✅ Posture changée vers: {postures[choice].value}{Colors.RESET}")
         else:
@@ -69,6 +73,7 @@ class FacilitatorHandler(BaseAgentHandler):
     async def display_context(self):
         """Affiche le contexte complet du facilitateur"""
         try:
+            # self.session est une instance de FacilitatorChatSession (coeur IA)
             ctx = await self.session.get_session_context()
             metrics = ctx.metrics
             
@@ -93,6 +98,7 @@ class FacilitatorHandler(BaseAgentHandler):
     async def _display_metrics(self):
         """Affiche les métriques de la session"""
         try:
+            # self.session est une instance de FacilitatorChatSession (coeur IA)
             ctx = await self.session.get_session_context()
             metrics = ctx.metrics
             

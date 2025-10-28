@@ -2,8 +2,10 @@
 Handler pour l'agent Assistant
 """
 from typing import Dict
-from hello_pulse.chat.agent_handlers.base_handler import BaseAgentHandler
-from hello_pulse.chat.utils.colors import Colors
+# Import du handler de base local (corrigé)
+from .base_handler import BaseAgentHandler
+# Import des utils locaux (corrigé)
+from terminal_app.cli_utils.colors import Colors
 
 
 class AssistantHandler(BaseAgentHandler):
@@ -60,6 +62,7 @@ class AssistantHandler(BaseAgentHandler):
         }
         
         if choice in phases:
+            # self.session est une instance de AssistantChatSession (du coeur IA)
             self.session.set_phase(phases[choice])
             print(f"{Colors.GREEN}✅ Phase changée vers: {phases[choice]}{Colors.RESET}")
         else:
@@ -82,6 +85,7 @@ class AssistantHandler(BaseAgentHandler):
         }
         
         if choice in roles:
+            # self.session est une instance de AssistantChatSession (du coeur IA)
             self.session.set_user_role(roles[choice])
             print(f"{Colors.GREEN}✅ Rôle changé vers: {roles[choice]}{Colors.RESET}")
         else:
@@ -89,6 +93,7 @@ class AssistantHandler(BaseAgentHandler):
     
     async def display_context(self):
         """Affiche le contexte de l'assistant"""
+        # self.session est une instance de AssistantChatSession (du coeur IA)
         info = self.session.get_context_info()
         
         print(f"\n{Colors.BOLD}💬 CONTEXTE ASSISTANT:{Colors.RESET}")

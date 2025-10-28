@@ -72,7 +72,8 @@ class SessionLogger:
         # Déterminer le dossier de logs
         if log_dir is None:
             # Par défaut : logs/ à la racine du projet
-            project_root = Path(__file__).parent.parent.parent.parent
+            # Le chemin est relatif à CE fichier (terminal_app/cli_utils/logger.py)
+            project_root = Path(__file__).parent.parent.parent
             self.log_dir = project_root / "logs"
         else:
             self.log_dir = log_dir
@@ -161,8 +162,11 @@ class SessionLogger:
             'logs': [entry.to_dict() for entry in self.logs]
         }
         
-        with open(self.log_file, 'w', encoding='utf-8') as f:
-            json.dump(log_data, f, indent=2, ensure_ascii=False)
+        try:
+            with open(self.log_file, 'w', encoding='utf-8') as f:
+                json.dump(log_data, f, indent=2, ensure_ascii=False)
+        except Exception as e:
+            print(f"Erreur lors de la sauvegarde du logger: {e}")
     
     def get_log_path(self) -> Path:
         """Retourne le chemin du fichier de log"""

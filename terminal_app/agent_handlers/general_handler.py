@@ -2,8 +2,10 @@
 Handler pour l'agent General
 """
 from typing import Dict
-from hello_pulse.chat.agent_handlers.base_handler import BaseAgentHandler
-from hello_pulse.chat.utils.colors import Colors
+# Import du handler de base local (corrigé)
+from .base_handler import BaseAgentHandler
+# Import des utils locaux (corrigé)
+from terminal_app.cli_utils.colors import Colors
 
 
 class GeneralHandler(BaseAgentHandler):
@@ -50,6 +52,7 @@ class GeneralHandler(BaseAgentHandler):
         task = input(f"{Colors.CYAN}Tâche: {Colors.RESET}").strip()
         
         if task:
+            # self.session est une instance de GeneralChatSession (coeur IA)
             self.session.set_task(task)
             print(f"{Colors.GREEN}✅ Tâche enregistrée{Colors.RESET}")
         else:
@@ -57,6 +60,7 @@ class GeneralHandler(BaseAgentHandler):
     
     def _show_status(self):
         """Affiche le statut de la tâche en cours"""
+        # self.session est une instance de GeneralChatSession (coeur IA)
         info = self.session.get_context_info()
         
         print(f"\n{Colors.BOLD}📊 STATUT DE LA TÂCHE:{Colors.RESET}")
@@ -70,6 +74,7 @@ class GeneralHandler(BaseAgentHandler):
     
     async def display_context(self):
         """Affiche le contexte du general"""
+        # self.session est une instance de GeneralChatSession (coeur IA)
         info = self.session.get_context_info()
         
         print(f"\n{Colors.BOLD}🤖 CONTEXTE GENERAL:{Colors.RESET}")

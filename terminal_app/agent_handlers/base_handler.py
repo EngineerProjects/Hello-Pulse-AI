@@ -8,14 +8,13 @@ from typing import Optional, Dict, Any
 class BaseAgentHandler(ABC):
     """
     Classe abstraite pour les handlers d'agents.
-    
     Chaque agent doit implémenter son propre handler avec ses commandes spécifiques.
     """
     
     def __init__(self, session):
         """
         Args:
-            session: Instance de la session de chat de l'agent
+            session: Instance de la session de chat de l'agent (ex: AssistantChatSession)
         """
         self.session = session
     
@@ -35,7 +34,6 @@ class BaseAgentHandler(ABC):
     def get_available_commands(self) -> Dict[str, str]:
         """
         Retourne un dictionnaire des commandes spécifiques à l'agent.
-        
         Returns:
             Dict[command, description]
         """
@@ -45,7 +43,6 @@ class BaseAgentHandler(ABC):
     async def handle_command(self, command: str) -> bool:
         """
         Traite une commande spécifique à l'agent.
-        
         Args:
             command: La commande à traiter (ex: '/posture', '/phase')
             
@@ -62,7 +59,6 @@ class BaseAgentHandler(ABC):
     def get_session_info(self) -> Dict[str, Any]:
         """
         Retourne les informations générales de la session.
-        
         Returns:
             Dictionnaire avec les infos de session
         """

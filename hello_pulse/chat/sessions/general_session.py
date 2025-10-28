@@ -5,7 +5,7 @@ Cette classe étend ChatSession avec des fonctionnalités spécifiques
 au general comme la gestion des tâches autonomes et itérations.
 """
 from typing import Optional
-from hello_pulse.chat.sessions.chat_session import ChatSession
+from hello_pulse.chat.chat_session import ChatSession
 
 
 class GeneralChatSession(ChatSession):

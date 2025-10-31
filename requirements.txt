@@ -1,6 +1,7 @@
-pydantic-ai==1.4.0
-python-dotenv==1.0.0
-httpx==0.28.1
-pyyaml>=6.0
+pydantic-ai
+
+python-dotenv
+httpx
+pyyaml
+
 mcp-tavily
-rich

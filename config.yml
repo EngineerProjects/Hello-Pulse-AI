@@ -1,106 +1,16 @@
-# Configuration globale Hello Pulse
-# Tous les agents et services sont configurés ici
+# === GENERAL AGENT ===
+agent:
+  model: "google-gla:gemini-2.0-flash"
+  temperature: 0.8
+  max_tokens: 8192
+  max_iterations: 20
 
-# === AGENTS ===
-
-agents:
-  # ========================================
-  # CANVAS - Agent Facilitateur (Proactif)
-  # ========================================
-  facilitator:
-    model:
-      name: "gemini-2.0-flash"
-      temperature: 0.7
-      max_tokens: 2048
-    
-    postures:
-      default: "guide"
-      auto_switch: true
-      available:
-        - guide
-        - provocateur
-        - mediateur
-        - timekeeper
-    
-    behavior:
-      encourage_creativity: true
-      suggest_transitions: true
-      proactive_interventions: true
-    
-    monitoring:
-      check_interval: 30  # secondes
-      thresholds:
-        silence_warning: 900  # 15 minutes
-        silence_critical: 1500  # 25 minutes
-        dominant_threshold: 0.5  # 50% de participation
-        energy_drop_warning: 0.3  # 30% de baisse
-        energy_drop_critical: 0.5  # 50% de baisse
-    
-    tools_mcp: []  # Pas de tools MCP (uniquement tools internes)
-
-  # ========================================
-  # CANVAS - Agent Assistant (Réactif)
-  # ========================================
-  assistant:
-    model:
-      name: "gemini-2.0-flash"
-      temperature: 0.6  # Plus factuel que facilitateur
-      max_tokens: 2048
-    
-    behavior:
-      reactive: true
-      concise_answers: true
-    
-    capabilities:
-      qa: true                # Q&A conversationnel
-      web_search: true        # Recherche web via Tavily
-      knowledge_base: true    # RAG (méthodologies + entreprise)
-      simple_image_gen: false # (Futur) Génération images simples
-    
-    tools_mcp:
-      - tavily              # Web search
-      # - knowledge_base    # (Futur) RAG
-
-  # ========================================
-  # GENERAL AI - Agent Général (Avancé)
-  # ========================================
-  general:
-    model:
-      name: "gemini-2.0-flash"
-      temperature: 0.8  # Plus créatif pour génération
-      max_tokens: 8192  # Plus de tokens pour contenu long
-    
-    capabilities:
-      deep_research: true       # Recherche multi-sources approfondie
-      mass_generation: true     # SCAMPER 50+ variations
-      advanced_prototyping: true # Prototypes complexes
-      agent_builder: false      # (Futur) Builder agents custom
-    
-    tools_mcp:
-      - "*" # Charger tous les tools MCP définis dans mcp_config.json
-
-# === MCP (Model Context Protocol) ===
-
+# === MCP INTEGRATION ===
 mcp:
   enabled: true
-  config_file: "mcp_config.json"
+  config_file: "mcp_config.json"  # Use existing MCP config
 
-# === DATA PROVIDERS ===
-
-data_providers:
-  mock:
-    random_mode: true
-    update_interval: 30  # secondes
-    team_size:
-      min: 3
-      max: 10
-  
-  api:
-    base_url: "http://localhost:8000"  # À configurer
-    timeout: 30
-
-# === SYSTÈME ===
-
+# === SYSTEM ===
 system:
   log_level: "INFO"
   save_history: true

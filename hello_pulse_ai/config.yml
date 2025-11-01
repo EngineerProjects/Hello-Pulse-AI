@@ -1,0 +1,17 @@
+# === GENERAL AGENT ===
+agent:
+  model: "google-gla:gemini-2.0-flash"
+  temperature: 0.8
+  max_tokens: 8192
+  max_iterations: 20
+
+# === MCP INTEGRATION ===
+mcp:
+  enabled: true
+  config_file: "mcp_config.json"  # Use existing MCP config
+
+# === SYSTEM ===
+system:
+  log_level: "INFO"
+  save_history: true
+  history_dir: "chat_histories"

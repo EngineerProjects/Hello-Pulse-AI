@@ -76,7 +76,7 @@ stop_and_remove_containers() {
     fi
     
     # Remove individual containers if they exist
-    local containers=("searxng" "firecrawl" "deep-research" "chroma" "redis")
+    local containers=("searxng" "firecrawl" "redis")
     for container in "${containers[@]}"; do
         if docker ps -a --format "table {{.Names}}" | grep -q "^$container$" 2>/dev/null; then
             log_info "Removing container: $container"
@@ -92,9 +92,7 @@ remove_docker_images() {
         # Remove images by tag pattern
         local images=(
             "hello-pulse-ai_firecrawl"
-            "hello-pulse-ai_deep-research"
             "hello-pulse-ai-firecrawl"
-            "hello-pulse-ai-deep-research"
         )
         
         for image in "${images[@]}"; do
@@ -115,9 +113,7 @@ remove_docker_volumes() {
         # Remove project-specific volumes
         local volumes=(
             "hello-pulse-ai_redis_data"
-            "hello-pulse-ai_chroma_data"
             "redis_data"
-            "chroma_data"
         )
         
         for volume in "${volumes[@]}"; do
@@ -145,7 +141,7 @@ uninstall_global_packages() {
         log_info "Uninstalling global npm packages..."
         
         # List of packages to uninstall
-        local packages=("mcp-searxng" "chroma-mcp")
+        local packages=("mcp-searxng")
         
         for package in "${packages[@]}"; do
             if npm list -g --depth=0 2>/dev/null | grep -q "$package"; then
@@ -163,7 +159,7 @@ remove_project_directories() {
     
     # Remove MCP servers directory
     if [ -d "$MCP_SERVERS_DIR" ]; then
-        rm -rf "$MCP_SERVERS_DIR"
+        sudo rm -rf "$MCP_SERVERS_DIR"
         log_success "Removed: $MCP_SERVERS_DIR"
     fi
     
@@ -255,7 +251,6 @@ clean_environment_file() {
             # Remove MCP-related environment variables
             sed -i '/SEARXNG_SECRET_KEY=/d' "$PROJECT_ROOT/.env" 2>/dev/null || true
             sed -i '/FIRECRAWL_/d' "$PROJECT_ROOT/.env" 2>/dev/null || true
-            sed -i '/CHROMA_/d' "$PROJECT_ROOT/.env" 2>/dev/null || true
             
             log_success "Cleaned .env file"
         fi
@@ -266,7 +261,7 @@ remove_cloned_repositories() {
     log_info "Removing cloned repositories..."
     
     # Check for repositories that might have been cloned to project root
-    local repos=("deep-research-mcp" "localfirecrawl")
+    local repos=("localfirecrawl")
     
     for repo in "${repos[@]}"; do
         if [ -d "$PROJECT_ROOT/$repo" ]; then
@@ -278,8 +273,8 @@ remove_cloned_repositories() {
 
 # === MAIN CLEANUP FUNCTION ===
 main() {
-    echo "🧹 Hello Pulse AI - Comprehensive Cleanup"
-    echo "========================================="
+    echo "🧹 Hello Pulse AI - Comprehensive Cleanup (Simplified)"
+    echo "====================================================="
     echo ""
     
     log_warning "This script will remove all MCP servers, Docker containers, and related files."
@@ -321,7 +316,7 @@ main() {
     echo "📋 What was cleaned:"
     echo "  ✅ Docker containers and images"
     echo "  ✅ Docker volumes and networks"
-    echo "  ✅ Global npm packages"
+    echo "  ✅ Global npm packages (mcp-searxng)"
     echo "  ✅ Project directories and files"
     echo "  ✅ Python and Node.js artifacts"
     echo "  ✅ Configuration files"

@@ -8,7 +8,7 @@ agent:
 # === MCP INTEGRATION ===
 mcp:
   enabled: true
-  config_file: "mcp_config.json"  # Use existing MCP config
+  config_file: "mcp_config.json"
 
 # === SYSTEM ===
 system:

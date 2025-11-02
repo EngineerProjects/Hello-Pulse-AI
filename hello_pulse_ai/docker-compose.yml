@@ -15,9 +15,10 @@ services:
       - mcp_network
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080"]
-      interval: 60s
+      interval: 30s
       timeout: 10s
-      retries: 3
+      retries: 10
+      start_period: 60s
 
   # Redis for SearXNG caching
   redis:
@@ -30,67 +31,6 @@ services:
     volumes:
       - redis_data:/data
 
-  # Local Firecrawl - Web scraping service
-  firecrawl:
-    build:
-      context: ./mcp_servers/firecrawl
-      dockerfile: Dockerfile
-    container_name: firecrawl
-    ports:
-      - "3002:3002"
-    environment:
-      - SEARXNG_URL=http://searxng:8080
-      - REDIS_URL=redis://redis:6379
-      - PORT=3002
-    depends_on:
-      searxng:
-        condition: service_healthy
-      redis:
-        condition: service_started
-    restart: unless-stopped
-    networks:
-      - mcp_network
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3002/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
-  # Deep Research MCP Server
-  deep-research:
-    build:
-      context: ./mcp_servers/deep-research
-      dockerfile: Dockerfile
-    container_name: deep-research
-    environment:
-      - FIRECRAWL_BASE_URL=http://firecrawl:3002
-      - NODE_ENV=production
-      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
-    depends_on:
-      firecrawl:
-        condition: service_healthy
-    restart: unless-stopped
-    networks:
-      - mcp_network
-    volumes:
-      - ./data/deep-research/reports:/app/reports
-
-  # Chroma Vector Database (optional)
-  chroma:
-    image: chromadb/chroma:latest
-    container_name: chroma
-    ports:
-      - "8000:8000"
-    environment:
-      - IS_PERSISTENT=TRUE
-      - PERSIST_DIRECTORY=/chroma/chroma
-      - ANONYMIZED_TELEMETRY=TRUE
-    volumes:
-      - chroma_data:/chroma/chroma
-    restart: unless-stopped
-    networks:
-      - mcp_network
-
 networks:
   mcp_network:
     driver: bridge
@@ -98,6 +38,4 @@ networks:
 
 volumes:
   redis_data:
-    driver: local
-  chroma_data:
     driver: local

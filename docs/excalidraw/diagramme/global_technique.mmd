@@ -1,0 +1,82 @@
+---
+config:
+  themeVariables:
+    nodeWidth: '1000'
+---
+flowchart TB
+ subgraph SOURCES["📊 SOURCES DE DONNÉES"]
+        A1@{ label: "🏢 **AZ** - Données Actuelles<br>📋 Contrats agents + courtiers<br>📋 Portefeuille en cours<br>📋 Chiffres d'affaires<br><br>Tables: PTF16.IPF, PTF36.IPF<br>PTF16a.IPFM99, PTF36a.IPFM99" }
+        A2["🕒 **AZEC** - Historique Migré<br>📋 Anciens contrats 2008-2020<br>📋 Capitaux et garanties<br>📋 Données migrées<br><br>Tables: POLIC_CU<br>CAPITXCU.CAPITXCU"]
+        A3["☁️ **OneBI** - Émissions<br>📋 Primes émises détaillées<br>📋 Exercices comptables<br>📋 Données consolidées<br><br>Tables: rf_frl_prm_dtl_midcorp_m"]
+        A4["🔍 Référentiels Métier<br>📋 Segmentation produits<br>📋 Classification secteurs<br>📋 Coefficients réévaluation<br><br>Tables: segmentprdt, INDICES<br>CLIENT1, CLIENT3"]
+  end
+ subgraph P1["💜 **2. PORTEFEUILLE** - Contrats & Mouvements"]
+        B1["📥 2.1 Extraction Données Actuelles<br>🔸 Récupération contrats agents (PTF16)<br>🔸 Récupération contrats courtiers (PTF36)<br>🔸 Filtrage marché Construction (CMARCH=6)<br>🔸 Application règles business<br><br>📋 Entrées: PTF16.IPF, PTF36.IPF<br>📋 Sortie: MVT_CONST_PTF{vision} ✨ NOUVELLE"]
+        B2["📥 2.2 Extraction Historique Migré<br>🔸 Récupération polices anciennes AZEC<br>🔸 Récupération capitaux historiques<br>🔸 Mise au format compatible AZ<br>🔸 Préparation correspondance champs<br><br>📋 Entrées: POLIC_CU, CAPITXCU.CAPITXCU<br>📋 Sortie: AZEC_PTF{vision} ✨ NOUVELLE"]
+        B3["🧹 2.3 Nettoyage &amp; Harmonisation<br>🔸 Correction caractères mal encodés UTF8→Latin9<br>🔸 Détection résolution problèmes affichage<br>🔸 Harmonisation structures AZ ↔ AZEC<br>🔸 Validation qualité des champs<br><br>📋 Entrées: MVT_CONST_PTF{vision}, AZEC_PTF{vision}<br>📋 Sorties: mêmes tables 🔄 NETTOYÉES"]
+        B4["🔗 2.4 Fusion Intelligente AZ + AZEC<br>🔸 UNION données récentes AZ + historiques AZEC<br>🔸 Mapping automatique POLICE→NOPOL, PRODUIT→CDPROD<br>🔸 Gestion périodes chevauchement 2012-2020<br>🔸 Marquage origine via DIRCOM traçabilité<br><br>📋 Entrées: Tables AZ et AZEC nettoyées<br>📋 Sortie: MVT_PTF{vision} ✨ NOUVELLE"]
+        B5["🎯 2.5 Enrichissement Métier Standard<br>🔸 Segmentation produits 47 règles business<br>🔸 Classification ISIC secteurs activité<br>🔸 Calculs indicateurs mouvements AFN/RES<br>🔸 Contrôles qualité automatiques<br><br>📋 Entrée: MVT_PTF{vision}<br>📋 Sortie: MVT_PTF{vision} 🔄 ENRICHIE"]
+        B6["📦 2.6 Cube Final Portefeuille <br><br>📋 Entrée: MVT_PTF{vision} enrichie<br><br>📋 Sortie: CUBE.MVT_PTF{vision} ✨ NOUVELLE"]
+        B7["🔍 2.7 Enrichissement DataRisk Optionnel<br>🔸 Import données externes risque OneBI<br>🔸 Classifications spécialisées par métier<br>🔸 Analyses sectorielles complémentaires<br>🔸 Informations marché et concurrence<br><br>📋 Sources: Tables externes OneBI<br>📋 Sorties: CUBE.ird_risk_qan_{vision}<br>CUBE.ird_risk_q45_{vision}<br>CUBE.ird_risk_q46_{vision} ✨ NOUVELLES"]
+        n1["Untitled Node"]
+  end
+ subgraph P2["🧡 **3. ÉMISSIONS** - Primes & Production"]
+        C1["📥 3.1 Extraction OneBI Centralisée<br>🔸 Récupération primes émises détaillées<br>🔸 Focus marché Construction cd_marche=6<br>🔸 Séparation exercice courant/antérieur<br>🔸 Exclusion données fictives et test<br><br>📋 Entrée: PRM.rf_frl_prm_dtl_midcorp_m<br>📋 Sorties: PRIMES_ONE_BI ✨ NOUVELLE<br>PRIMES_EMISES{vision}_OBI ✨ NOUVELLE"]
+        C2["🧹 3.2 Nettoyage &amp; Validation<br>🔸 Correction caractères mal encodés<br>🔸 Vérification cohérence des données<br>🔸 Uniformisation formats et types<br>🔸 Contrôles de vraisemblance<br><br>📋 Entrée: PRIMES_EMISES{vision}_OBI<br>📋 Sortie: PRIMES_EMISES{vision}_OBI_TR ✨ NOUVELLE"]
+        C3["🎯 3.3 Segmentation &amp; Classification<br>🔸 Jointure avec référentiel produits<br>🔸 Attribution catégories business<br>🔸 Classification par marché et segment<br>🔸 Validation cohérence métier<br><br>📋 Entrées: PRIMES_EMISES{vision}_OBI_TR<br>SEG.segmentprdt_{vision}<br>📋 Sortie: PRIMES_EMISES{vision}_OBI_TR 🔄 ENRICHIE"]
+        C4["📊 3.4 Agrégations Business<br>🔸 Regroupements par police<br>🔸 Calculs par garantie détaillée GARP<br>🔸 Synthèses par contrat<br>🔸 Calculs commissions associées<br><br>📋 Entrée: PRIMES_EMISES{vision}_OBI_TR enrichie<br>📋 Sortie: Tables agrégées 🔄 CALCULÉES"]
+        C5["📦 3.5 Cubes Finaux Émissions<br>🏆 Détail par garantie GARP<br>🏆 Synthèse par police<br>🏆 Primes exercice courant et antérieur<br>🏆 Commissions et marges calculées<br><br>📋 Entrée: Tables agrégées<br>📋 Sorties: CUBE.PRIMES_EMISES{vision}_POL_GARP ✨ NOUVELLE<br>CUBE.PRIMES_EMISES{vision}_POL ✨ NOUVELLE"]
+  end
+ subgraph P3["💚 **1. CAPITAUX** - Garanties & Couvertures"]
+        D1["📥 1.1 Extraction Capitaux Actuels<br>🔸 Récupération 14 types capitaux MTCAPI1-14<br>🔸 Calculs plafonds par contrat<br>🔸 Traitement garanties particulières<br>🔸 Focus marché Construction<br><br>📋 Entrées: PTF16.IPF, PTF36.IPF<br>📋 Sorties: PTF_CONST_SMP_LCI{vision} ✨ NOUVELLE<br>_00_PTF_CONST_SMP_LCI{vision} ✨ NOUVELLE"]
+        D2["📥 1.2 Extraction Capitaux Historiques<br>🔸 Récupération capitaux anciens AZEC<br>🔸 Traitements spéciaux données historiques<br>🔸 Calculs plafonds SMP/LCI par type PE/DD<br>🔸 Mise au format compatible AZ<br><br>📋 Entrée: CAPITXCU.CAPITXCU<br>📋 Sortie: _00_CAPITAUX_AZEC ✨ NOUVELLE"]
+        D3["💰 1.3 Indexation à Valeur Économique<br>🔸 Application indices réévaluation par poste 14 types<br>🔸 Formule : MTCAPIi = MTCAPI × INDXINTG/INDXORIG<br>🔸 Gestion 4 indices par poste selon CDPRVB + date<br>🔸 Harmonisation temporelle pour comparabilité<br><br>📋 Entrées: Tables AZ et AZEC + INDICES<br>📋 Sorties: mêmes tables 🔄 INDEXÉES"]
+        D4["🔗 1.4 Consolidation Finale<br>🔸 Fusion intelligente capitaux AZ + AZEC<br>🔸 Arbitrage et choix de la meilleure source<br>🔸 Calculs business finaux harmonisés<br>🔸 Vérifications cohérence globale<br><br>📋 Entrées: Tables AZ et AZEC indexées<br>📋 Sortie: Table consolidée 🔄 FUSIONNÉE"]
+        D5["📦 1.5 Cube Final Capitaux<br>🏆 Capitaux à valeur économique actuelle<br>🏆 Plafonds harmonisés AZ + AZEC<br>🏆 Garanties classées par catégorie<br>🏆 Montants comparables dans le temps<br><br>📋 Entrée: Table consolidée<br>📋 Sortie: CUBE.AZ_AZEC_CAPITAUX_{vision} ✨ NOUVELLE"]
+  end
+    A1 --> B1 & D1
+    A2 --> B2 & D2
+    A3 --> C1
+    A4 --> B5 & B7 & C3 & D3
+    B1 --> B3
+    B2 --> B3
+    B3 --> B4
+    B4 --> B5
+    B5 --> B6 & B7
+    C1 --> C2
+    C2 --> C3
+    C3 --> C4
+    C4 --> C5
+    D1 --> D3
+    D2 --> D3
+    D3 --> D4
+    D4 --> D5
+    B2 --> n1
+
+    A1@{ shape: rect}
+     A1:::source
+     A2:::source
+     A3:::source
+     A4:::source
+     B1:::process1
+     B2:::process1
+     B3:::process1
+     B4:::process1
+     B5:::process1
+     B6:::process1
+     B7:::process1
+     C1:::process2
+     C2:::process2
+     C3:::process2
+     C4:::process2
+     C5:::process2
+     D1:::process3
+     D2:::process3
+     D3:::process3
+     D4:::process3
+     D5:::process3
+    classDef source fill:#E3F2FD,stroke:#1976D2,stroke-width:2px
+    classDef process1 fill:#F3E5F5,stroke:#7B1FA2,stroke-width:2px
+    classDef process2 fill:#FFF3E0,stroke:#F57C00,stroke-width:2px
+    classDef process3 fill:#E8F5E8,stroke:#388E3C,stroke-width:2px
+    classDef output fill:#E1F5FE,stroke:#0277BD,stroke-width:3px

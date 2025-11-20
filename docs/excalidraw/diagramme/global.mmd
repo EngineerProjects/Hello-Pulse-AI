@@ -1,0 +1,83 @@
+---
+config:
+  themeVariables:
+    fontSize: '16px'
+---
+flowchart TB
+    subgraph SOURCES["📊 SOURCES DE DONNÉES"]
+        direction TB
+        subgraph IMS["🏢 IMS - Base de données principale"]
+            S1["📁 Source 1: AZEC<br>Anciens contrats<br>(2008-2020)"]
+            S2["📁 Source 2: AZ<br>Contrats actuels<br>(Agents & Courtiers)"]
+        end
+        S3["📋 Source 3<br>Classification des produits"]
+        S4["☁️ Source 4: OneBI<br>Données de primes émises"]
+    end
+
+    subgraph PROCESS["⚙️ TRAITEMENT DES DONNÉES"]
+        direction TB
+        
+        subgraph P1["💚 Processus 1: CAPITAUX"]
+            P1_1["📥 Étape 1<br><b>Récupération</b><br>Collecte des montants<br>garantis par contrat"]
+            P1_2["🔄 Étape 2<br><b>Mise à jour et fusion</b><br>• Ajustement des montants dans le temps<br>• Regroupement anciennes/nouvelles données<br>• Uniformisation des formats"]
+            P1_3["📦 Étape 3<br><b>Résultat</b><br><br>Vue complète des<br>montants garantis par contrat"]
+        end
+        
+        subgraph P2["💜 Processus 2: PORTEFEUILLE"]
+            P2_1["📥 Étape 1<br><b>Récupération</b><br>Collecte des contrats<br>anciens et actuels"]
+            P2_2["🔄 Étape 2<br><b>Mise à jour et fusion</b><br>• Nettoyage des doublons<br>• Regroupement anciennes/nouvelles données<br>• Classification par type de produit<br>• Classification par secteur d'activité"]
+            P2_3["📦 Étape 3<br><b>Résultat</b><br><br>Vue complète du<br>portefeuille par produit et secteur"]
+        end
+        
+        subgraph P3["🧡 Processus 3: ÉMISSIONS"]
+            P3_1["📥 Étape 1<br><b>Récupération</b><br>Collecte des primes<br>facturées aux clients"]
+            P3_2["🔄 Étape 2<br><b>Mise à jour et fusion</b><br>• Vérification des montants<br>• Classification par type de produit<br>• Calcul des totaux par contrat<br>• Calcul des commissions"]
+            P3_3["📦 Étape 3<br><b>Résultat</b><br><br>Vue complète des primes<br>facturées et commissions par produit"]
+        end
+    end
+
+    subgraph OUTPUTS["📊 RÉSULTATS FINAUX"]
+        OUT1["✅ Montants garantis<br>par contrat actualisés"]
+        OUT2["✅ Portefeuille de contrats<br>par produit et secteur"]
+        OUT3["✅ Primes facturées et<br>commissions par produit"]
+    end
+
+    %% Connexions optimisées Sources -> Processus
+    IMS --> P1_1
+    IMS --> P2_1
+    S3 --> P1_2
+    S3 --> P2_2
+    S3 --> P3_2
+    S4 --> P3_1
+
+    %% Connexions internes Processus 1
+    P1_1 --> P1_2
+    P1_2 --> P1_3
+
+    %% Connexions internes Processus 2
+    P2_1 --> P2_2
+    P2_2 --> P2_3
+
+    %% Connexions internes Processus 3
+    P3_1 --> P3_2
+    P3_2 --> P3_3
+
+    %% Connexions vers outputs
+    P1_3 --> OUT1
+    P2_3 --> OUT2
+    P3_3 --> OUT3
+
+    %% Styles
+    classDef sourceStyle fill:#E3F2FD,stroke:#1976D2,stroke-width:3px,color:#000
+    classDef imsStyle fill:#F0F4FF,stroke:#1976D2,stroke-width:2px,color:#000
+    classDef process1Style fill:#E8F5E8,stroke:#388E3C,stroke-width:2px,color:#000
+    classDef process2Style fill:#F3E5F5,stroke:#7B1FA2,stroke-width:2px,color:#000
+    classDef process3Style fill:#FFF3E0,stroke:#F57C00,stroke-width:2px,color:#000
+    classDef outputStyle fill:#E1F5FE,stroke:#0277BD,stroke-width:3px,color:#000,font-weight:bold
+
+    class S1,S2,S3,S4 sourceStyle
+    class IMS imsStyle
+    class P1_1,P1_2,P1_3 process1Style
+    class P2_1,P2_2,P2_3 process2Style
+    class P3_1,P3_2,P3_3 process3Style
+    class OUT1,OUT2,OUT3 outputStyle
